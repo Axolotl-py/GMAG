@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GMAG - Analise laboratorial</title>
+    <title>GMAG - Análise Laboratorial</title>
     <script type="text/javascript" src="/eel.js"></script>
     <style>
         :root {
@@ -14,14 +14,18 @@
             --accent-color: #4dabf7;
             --border-color: #333;
             --hover-bg: #333;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --warning-color: #f39c12;
         }
 
         body {
             margin: 0;
-            font-family: 'Times New Roman', Times, serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            transition: background-color 0.3s, color 0.3s;
+            transition: all 0.3s ease;
+            line-height: 1.6;
         }
 
         .container {
@@ -35,6 +39,11 @@
             padding: 20px;
             box-sizing: border-box;
             border-right: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-250px);
         }
 
         .sidebar h2 {
@@ -42,6 +51,7 @@
             padding-bottom: 10px;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-primary);
+            text-align: center;
         }
 
         .sidebar ul {
@@ -57,343 +67,155 @@
             color: var(--text-secondary);
             text-decoration: none;
             display: block;
-            padding: 8px;
+            padding: 10px 15px;
             border-radius: 4px;
             transition: all 0.3s ease;
+            font-size: 1.1em;
         }
 
-        .sidebar a:hover {
+        .sidebar a:hover, .sidebar a.active {
             background-color: var(--hover-bg);
             color: var(--text-primary);
         }
 
         .main-content {
             flex: 1;
-            padding: 20px;
+            padding: 30px;
+            background-color: var(--bg-primary);
+            overflow-y: auto;
+        }
+
+        .card {
             background-color: var(--bg-secondary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
         }
 
-        .directory-container {
-            width: 80%;
-            max-width: 500px;
-            margin: 20px 0;
+        .form-group {
+            margin-bottom: 20px;
         }
 
-        .directory-input {
-            margin-bottom: 30px;
-            width: 100%;
-        }
-
-        .directory-input label {
+        label {
             display: block;
             margin-bottom: 8px;
-            color: var(--text-primary);
-            font-size: 16px;
+            font-weight: 500;
         }
 
-        .directory-input-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .directory-input input {
-            flex: 1;
+        input[type="text"], input[type="file"] {
+            width: 100%;
             padding: 10px;
             border-radius: 4px;
             border: 1px solid var(--border-color);
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            font-size: 14px;
+            margin-bottom: 10px;
         }
 
-        .directory-input button {
-            padding: 10px 15px;
+        button {
             background-color: var(--accent-color);
             color: white;
             border: none;
+            padding: 12px 20px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin-right: 10px;
         }
 
-        .directory-input button:hover {
-            background-color: #3a8fd5;
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: var(--text-secondary);
+            cursor: not-allowed;
         }
 
         .theme-toggle {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            padding: 10px;
+            padding: 12px;
             background-color: var(--accent-color);
             color: white;
             border: none;
             border-radius: 50%;
             cursor: pointer;
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            font-size: 1.5em;
         }
-        .process-button {
+
+        .sidebar-toggle {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            padding: 12px;
             background-color: var(--accent-color);
             color: white;
-            padding: 12px 24px;
             border: none;
-            border-radius: 4px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
-            transition: all 0.3s;
-        }
-
-        .process-button:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
-        .process-button:disabled {
-            background-color: #666;
-            cursor: not-allowed;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            font-size: 1.5em;
         }
 
         .status-message {
-            margin-top: 20px;
-            padding: 10px;
+            padding: 15px;
             border-radius: 4px;
-            text-align: center;
-        }
-        .painel-processamento {
-            margin-top: 30px;
-            width: 80%;
-            max-width: 800px;
-        }
-
-        .barra-progresso {
-            height: 10px;
-            background-color: #444;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-
-        .progresso {
-            height: 100%;
-            width: 0;
-            transition: width 0.3s, background-color 0.3s;
-        }
-
-        .historico-container {
-            margin-top: 30px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 20px;
-        }
-
-        .lista-historico {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .item-historico {
-            padding: 10px;
-            margin: 5px 0;
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-        }
-
-        .data-historico {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .detalhes-historico div {
-            margin: 3px 0;
-            font-size: 14px;
-        }
-        .sobre-container {
-            background-color: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 8px;
             margin-top: 20px;
-        }
-
-        .sobre-container h3 {
-            margin-top: 0;
-            color: var(--accent-color);
-        }
-
-        .sobre-container ul {
-            padding-left: 20px;
-        }
-
-        .sobre-container li {
-            margin-bottom: 8px;
-        }
-
-        #titulo-processamento {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: var(--accent-color);
-            text-align: center;
-        }
-        .tela {
             display: none;
-            width: 100%;
         }
-        
-        /* Corrigir a classe ativa */
-        .tela.ativa {
+
+        .success {
+            background-color: rgba(46, 204, 113, 0.2);
+            border-left: 4px solid var(--success-color);
             display: block;
         }
 
-        /* Estilos adicionais para o tema claro */
-        .light-theme {
-            --bg-primary: #f5f5f5;
-            --bg-secondary: #ffffff;
-            --text-primary: #333333;
-            --text-secondary: #555555;
-            --accent-color: #1a73e8;
-            --border-color: #e0e0e0;
-            --hover-bg: #f0f0f0;
+        .error {
+            background-color: rgba(231, 76, 60, 0.2);
+            border-left: 4px solid var(--error-color);
+            display: block;
         }
 
-        .light-theme .sidebar {
-            background-color: #f0f0f0;
-            border-right: 1px solid #ddd;
+        .warning {
+            background-color: rgba(243, 156, 18, 0.2);
+            border-left: 4px solid var(--warning-color);
+            display: block;
         }
 
-        .light-theme .directory-input input {
-            background-color: white;
-            color: #333;
-            border: 1px solid #ccc;
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
         }
 
-        .light-theme .item-historico {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-        
-        .main-panel {
-            flex: 1;
-            padding: 20px;
-            background-color: var(--bg-secondary);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Barra Lateral -->
-        <div class="sidebar">
-            <h2>GMAG Menu</h2>
-            <ul>
-                <li><a href="#" onclick="selecionarModo('DRX')">DRX</a></li>
-                <li><a href="#" onclick="selecionarModo('VSM')">VSM</a></li>
-                <li><a href="#" onclick="selecionarModo('Termoeletrico')">Termoelétrico</a></li>
-                <li><a href="#" onclick="selecionarModo('MagnetoImpedancia')">Impedância</a></li>
-                <li><a href="#" onclick="selecionarModo('FMR')">FMR</a></li>
-                <li><a href="#" onclick="selecionarModo('Eletroima')">Eletroímã</a></li>
-                <li><a href="#" onclick="selecionarModo('Resistencia')">Resistência</a></li>
-                <li><a href="#" onclick="mostrarSobre()">Sobre</a></li>
-            </ul>
-        </div>
-        
-        <!-- Painel Principal -->
-        <div class="main-panel">
-            <!-- Tela de Processamento Genérico -->
-            <div id="tela-processamento" class="tela ativa">
-                <h2 id="titulo-processamento">Selecione um modo de operação</h2>
-                
-                <div class="directory-container">
-                    <!-- Input Directory -->
-                    <div class="directory-input">
-                        <label for="input-dir">Diretório de Entrada:</label>
-                        <div class="directory-input-group">
-                            <input type="text" id="input-dir" readonly>
-                            <button onclick="selecionarDiretorio('input')">Selecionar</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Output Directory -->
-                    <div class="directory-input">
-                        <label for="output-dir">Diretório de Saída:</label>
-                        <div class="directory-input-group">
-                            <input type="text" id="output-dir" readonly>
-                            <button onclick="selecionarDiretorio('output')">Selecionar</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Process Button -->
-                    <button id="btn-processar" class="process-button" disabled>
-                        Executar Processamento
-                    </button>
-                    
-                    <!-- Status -->
-                    <div id="status-processamento" class="status-message"></div>
-                    
-                    <!-- Progress Bar -->
-                    <div class="barra-progresso">
-                        <div id="progresso-processamento" class="progresso"></div>
-                    </div>
-                </div>
-                
-                <!-- Histórico -->
-                <div class="historico-container">
-                    <h3>Histórico de Processamentos</h3>
-                    <div id="historico-processamentos" class="lista-historico"></div>
-                </div>
-            </div>
-            
-            <!-- Tela Sobre -->
-            <div id="tela-sobre" class="tela">
-                <h2 id="titulo-sobre">Sobre o GMAG</h2>
-                <div id="conteudo-sobre" class="sobre-container"></div>
-            </div>
-        </div>
-    </div>
-        
-    <!-- Botão para alternar tema -->
-    <button class="theme-toggle" id="themeToggle">☀️</button>
-
-
-    <script>
-        // Função para selecionar diretório
-        function selecionarDiretorio(elementId) {
-            eel.selecionar_diretorio()(function(caminho) {
-                if (caminho) {
-                    document.getElementById(elementId).value = caminho;
-                }
-            });
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        // Alternador de tema
-        document.getElementById('themeToggle').addEventListener('click', function() {
-            document.body.classList.toggle('light-theme');
-            
-            // Mudar emoji/ícone
-            const themeToggle = document.getElementById('themeToggle');
-            if (document.body.classList.contains('light-theme')) {
-                themeToggle.innerHTML = '🌙';
-                localStorage.setItem('theme', 'light');
-            } else {
-                themeToggle.innerHTML = '☀️';
-                localStorage.setItem('theme', 'dark');
-            }
-        });
-
-        // Verificar tema ao carregar
-        if (localStorage.getItem('theme') === 'light') {
-            document.body.classList.add('light-theme');
-            document.getElementById('themeToggle').innerHTML = '🌙';
-        }
-    </script>
-
-    <style>
         /* Estilo do tema claro */
         .light-theme {
             --bg-primary: #f5f5f5;
@@ -405,318 +227,491 @@
             --hover-bg: #f0f0f0;
         }
 
-        .light-theme .directory-input input {
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 100;
+                height: 100vh;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+        /* Estilos para as abas */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 15px 0;
+        }
+
+        /* Galeria de gráficos */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .gallery-item {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .gallery-caption {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .img-responsive {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .img-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
             background-color: white;
-            color: #333;
-            border: 1px solid #ccc;
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
+
+        /* Pré-formatação para dados JSON */
+        pre {
+            background-color: var(--bg-primary);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
+</head>
 
-<script>
-    // Variáveis globais
-    let modoAtual = null;
-    let processamentoEmAndamento = false;
+<body>
+    <div class="container">
+        <!-- Barra Lateral -->
+        <div class="sidebar" id="sidebar">
+            <h2>GMAG Menu</h2>
+            <ul>
+                <li><a href="#" class="active" onclick="carregarInicio()">Início</a></li>
+                <li><a href="#" onclick="carregarDRX()">DRX</a></li>
+                <li><a href="#" onclick="carregarVSM()">VSM</a></li>
+                <li><a href="#" onclick="carregarFMR()">FMR</a></li>
+                <li><a href="#" onclick="carregarConfiguracoes()">Configurações</a></li>
+            </ul>
+        </div>
 
-    // Função para configurar o tema
-    function configurarTema() {
-        const themeToggle = document.getElementById('themeToggle');
-        const configTema = localStorage.getItem('tema') || 'escuro';
+        <!-- Conteúdo Principal -->
+        <div class="main-content" id="mainContent">
+            <div class="card">
+                <h1>Bem-vindo ao GMAG</h1>
+                <p>Selecione uma análise do menu à esquerda.</p>
+            </div>
+        </div>
+    </div>
 
-        // Aplicar tema salvo
-        if (configTema === 'claro') {
-            document.body.classList.add('light-theme');
-            themeToggle.innerHTML = '🌙';
-        } else {
-            document.body.classList.remove('light-theme');
-            themeToggle.innerHTML = '☀️';
-        }
+    <!-- Botão para alternar tema -->
+    <button class="theme-toggle" id="themeToggle">☀️</button>
 
-        // Configurar alternância
-        themeToggle.addEventListener('click', async () => {
-            document.body.classList.toggle('light-theme');
-            
-            const novoTema = document.body.classList.contains('light-theme') ? 'claro' : 'escuro';
-            localStorage.setItem('tema', novoTema);
-            themeToggle.innerHTML = novoTema === 'claro' ? '🌙' : '☀️';
+    <!-- Botão para alternar sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
 
-            // Salvar no Python
-            try {
-                await eel.salvar_configuracoes({ tema: novoTema })();
-            } catch (error) {
-                console.error("Erro ao salvar tema:", error);
-            }
-        });
-    }
+    <script type="text/javascript">
+        // Variáveis globais
+        let arquivoDRX = null;
+        let arquivoFMR = null;
+        let diretoriosVSM = {
+            dir1: null,
+            dir2: null,
+            dir3: null
+        };
 
-    // Função para mostrar tela específica
-    function mostrarTela(idTela) {
-        document.querySelectorAll('.tela').forEach(tela => {
-            tela.classList.remove('ativa');
-        });
-        document.getElementById(idTela).classList.add('ativa');
-    }
-
-    // Função para selecionar o modo de operação
-    function selecionarModo(modo) {
-        modoAtual = modo;
-        mostrarTela('tela-processamento');
-        document.getElementById('titulo-processamento').textContent = 
-            `Processamento ${modo.replace(/([A-Z])/g, ' $1').trim()}`;
-        verificarDiretorios();
-    }
-
-    // Função para mostrar tela específica
-    function mostrarTela(idTela) {
-        document.querySelectorAll('.tela').forEach(tela => {
-            tela.classList.remove('ativa');
-        });
-        document.getElementById(idTela).classList.add('ativa');
-    }
-
-    async function selecionarDiretorio(tipo) {
-    try {
-        const resultado = await eel.selecionar_diretorio(tipo)(); // ✅ chamada correta com await
-
-        // ⚠️ VERIFICAÇÃO DE EXISTÊNCIA
-        if (resultado && resultado.status === 'success') {
-            document.getElementById(`${tipo}-dir`).value = resultado.caminho; // ✅ usa ID dinâmico baseado em "tipo"
-            verificarDiretorios(); // ✅ função adicional
-        } else {
-            atualizarStatus("Nenhum diretório selecionado ou erro inesperado.", 'error'); // ✅ mensagem amigável
-        }
-    } catch (error) {
-        console.error("Erro ao selecionar diretório:", error); // ✅ logging de erro
-        atualizarStatus(`Erro ao selecionar diretório: ${error.message}`, 'error'); // ✅ feedback ao usuário
-    }
-}
-
-
-    // Função para verificar se ambos os diretórios estão preenchidos
-    function verificarDiretorios() {
-        const inputDir = document.getElementById('input-dir').value;
-        const outputDir = document.getElementById('output-dir').value;
-        const btnProcessar = document.getElementById('btn-processar');
-        
-        btnProcessar.disabled = !(inputDir && outputDir);
-    }
-
-    // Função para atualizar o status na interface
-    function atualizarStatus(mensagem, tipo = 'info') {
-        const statusElement = document.getElementById('status-processamento');
-        statusElement.textContent = mensagem;
-        
-        switch(tipo) {
-            case 'error':
-                statusElement.style.color = '#ff4444';
-                break;
-            case 'success':
-                statusElement.style.color = '#44ff44';
-                break;
-            default:
-                statusElement.style.color = 'var(--accent-color)';
-        }
-    }
-
-    // Função para atualizar a barra de progresso
-    function atualizarProgresso(percentual, tipo = 'info') {
-        const progresso = document.getElementById('progresso-processamento');
-        progresso.style.width = `${percentual}%`;
-        
-        switch(tipo) {
-            case 'error':
-                progresso.style.backgroundColor = '#ff4444';
-                break;
-            case 'success':
-                progresso.style.backgroundColor = '#44ff44';
-                break;
-            default:
-                progresso.style.backgroundColor = 'var(--accent-color)';
-        }
-    }
-
-    // Função principal para executar o processamento
-    async function executarProcessamento() {
-        if (processamentoEmAndamento) return;
-        
-        try {
-            processamentoEmAndamento = true;
-            const btnProcessar = document.getElementById('btn-processar');
-            btnProcessar.disabled = true;
-            
-            // Resetar interface
-            atualizarStatus("Iniciando validação dos diretórios...", 'info');
-            atualizarProgresso(0);
-            
-            // Passo 1: Validar diretórios
-            atualizarStatus("Validando diretórios...", 'info');
-            atualizarProgresso(10);
-            
-            const validacao = await eel.validar_diretorios()();
-            
-            if (!validacao.input.valido || !validacao.output.valido) {
-                let mensagemErro = "Erros encontrados:";
-                if (!validacao.input.valido) mensagemErro += `\n• Entrada: ${validacao.input.erro}`;
-                if (!validacao.output.valido) mensagemErro += `\n• Saída: ${validacao.output.erro}`;
-                
-                atualizarStatus(mensagemErro, 'error');
-                atualizarProgresso(100, 'error');
-                return;
-            }
-            
-            // Passo 2: Preparação para processamento
-            atualizarStatus("Preparando para processamento...", 'info');
-            atualizarProgresso(30);
-            
-            // Passo 3: Executar processamento
-            atualizarStatus("Processando dados... Isso pode levar alguns minutos", 'info');
-            atualizarProgresso(50);
-            
-            const resultado = await eel.executar_processamento()();
-            
-            if (resultado.status === 'success') {
-                atualizarStatus(`Processamento concluído com sucesso em ${resultado.duracao.toFixed(2)} segundos!`, 'success');
-                atualizarProgresso(100, 'success');
-                
-                // Atualizar histórico
-                await atualizarHistorico();
-            } else {
-                atualizarStatus(`Erro durante o processamento: ${resultado.message}`, 'error');
-                atualizarProgresso(100, 'error');
-            }
-            
-        } catch (error) {
-            console.error("Erro no processamento:", error);
-            atualizarStatus(`Erro na comunicação: ${error.message}`, 'error');
-            atualizarProgresso(100, 'error');
-        } finally {
-            processamentoEmAndamento = false;
-            document.getElementById('btn-processar').disabled = false;
-        }
-    }
-
-    // Função para carregar o histórico de processamentos
-    async function atualizarHistorico() {
-        try {
-            const historico = await eel.obter_historico()();
-            const historicoElement = document.getElementById('historico-processamentos');
-            
-            if (historico.length === 0) {
-                historicoElement.innerHTML = '<div class="item-historico">Nenhum processamento registrado</div>';
-                return;
-            }
-            
-            historicoElement.innerHTML = historico.map(item => `
-                <div class="item-historico">
-                    <div class="data-historico">${item.data}</div>
-                    <div class="detalhes-historico">
-                        <div><strong>Entrada:</strong> ${item.input}</div>
-                        <div><strong>Saída:</strong> ${item.output}</div>
-                        <div><strong>Duração:</strong> ${item.duracao.toFixed(2)} segundos</div>
-                        ${item.resultado ? `<div><strong>Resultado:</strong> ${item.resultado}</div>` : ''}
-                    </div>
+        // Funções para carregar páginas
+        function carregarInicio() {
+            setActiveLink('Início');
+            setMainContent(`
+                <div class="card">
+                    <h1>Bem-vindo ao GMAG</h1>
+                    <p>Sistema de Análise Laboratorial</p>
+                    <p>Selecione uma análise no menu à esquerda para começar.</p>
                 </div>
-            `).join('');
-        } catch (error) {
-            console.error("Erro ao carregar histórico:", error);
+                <div class="card">
+                    <h2>Recentes</h2>
+                    <p>Últimas análises realizadas aparecerão aqui</p>
+                </div>
+            `);
         }
-    }
 
-    // Função para alternar entre temas claro/escuro
-    function configurarTema() {
-        const themeToggle = document.getElementById('themeToggle');
-        
-        themeToggle.addEventListener('click', function() {
-            document.body.classList.toggle('light-theme');
+        function carregarDRX() {
+            setActiveLink('DRX');
+            setMainContent(`
+                <div class="card">
+                    <h1>Análise DRX</h1>
+                    <p>Processamento de dados de Difração de Raios-X</p>
+                    
+                    <div class="form-group">
+                        <label for="arquivoDRX">Arquivo de Dados DRX:</label>
+                        <input type="file" id="arquivoDRX" accept=".txt,.csv,.xlsx">
+                        <small>Formatos suportados: TXT, CSV, XLSX</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dirDRX">Diretório de Saída:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="dirDRX" readonly>
+                            <button onclick="selecionarDiretorio('dirDRX')">Selecionar</button>
+                        </div>
+                    </div>
+                    
+                    <button id="btnProcessarDRX" onclick="processarDRX()">Processar DRX</button>
+                    <div id="statusDRX" class="status-message"></div>
+                </div>
+            `);
+        }
+
+        function carregarVSM() {
+            setActiveLink('VSM');
+            setMainContent(`
+                <div class="card">
+                    <h1>Análise VSM</h1>
+                    <p>Processamento de dados de Magnetometria de Amostra Vibrante</p>
+                    
+                    <div class="form-group">
+                        <label>Diretórios de Entrada:</label>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="dirVSM1" placeholder="Diretório 1" readonly>
+                            <button onclick="selecionarDiretorio('dirVSM1')">Selecionar</button>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="dirVSM2" placeholder="Diretório 2" readonly>
+                            <button onclick="selecionarDiretorio('dirVSM2')">Selecionar</button>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="dirVSM3" placeholder="Diretório 3" readonly>
+                            <button onclick="selecionarDiretorio('dirVSM3')">Selecionar</button>
+                        </div>
+                    </div>
+                    
+                    <button id="btnProcessarVSM" onclick="processarVSM()">Processar VSM</button>
+                    <div id="statusVSM" class="status-message"></div>
+                </div>
+            `);
+        }
+
+        function carregarFMR() {
+            setActiveLink('FMR');
+            setMainContent(`
+                <div class="card">
+                    <h1>Análise FMR</h1>
+                    <p>Processamento de dados de Ressonância Magnética Ferromagnética</p>
+                    
+                    <div class="form-group">
+                        <label for="arquivoFMR">Arquivo de Dados FMR:</label>
+                        <input type="file" id="arquivoFMR" accept=".txt,.csv,.xlsx,.dat">
+                        <small>Formatos suportados: TXT, CSV, DAT</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dirFMR">Diretório de Saída:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="dirFMR" readonly>
+                            <button onclick="selecionarDiretorio('dirFMR')">Selecionar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 20px;">
+                        <h3>Parâmetros Iniciais para o Ajuste</h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div class="form-group">
+                                <label for="param_a">a (offset):</label>
+                                <input type="number" id="param_a" value="1" step="0.1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="param_b">b (inclinação):</label>
+                                <input type="number" id="param_b" value="0" step="0.001">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="param_c">c (amplitude pico 1):</label>
+                                <input type="number" id="param_c" value="1" step="0.1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="param_d">d (amplitude pico 2):</label>
+                                <input type="number" id="param_d" value="0.8" step="0.1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="param_hr1">Hr1 (posição pico 1 - Oe):</label>
+                                <input type="number" id="param_hr1" value="1000" step="10">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="param_dh1">dH1 (largura pico 1 - Oe):</label>
+                                <input type="number" id="param_dh1" value="50" step="5">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="param_hr2">Hr2 (posição pico 2 - Oe):</label>
+                                <input type="number" id="param_hr2" value="1200" step="10">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="param_dh2">dH2 (largura pico 2 - Oe):</label>
+                                <input type="number" id="param_dh2" value="50" step="5">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="btnProcessarFMR" onclick="processarFMR()">Processar FMR</button>
+                    <div id="statusFMR" class="status-message"></div>
+                    
+                    <div id="resultadosFMR" style="margin-top: 30px;"></div>
+                </div>
+            `);
+        }
+
+        function carregarConfiguracoes() {
+            setActiveLink('Configurações');
+            setMainContent(`
+                <div class="card">
+                    <h1>Configurações</h1>
+                    
+                    <div class="form-group">
+                        <label>Tema da Interface:</label>
+                        <select id="selectTema" onchange="alterarTema(this.value)">
+                            <option value="escuro">Escuro</option>
+                            <option value="claro">Claro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Diretório Padrão para Salvamento:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="dirPadrao" readonly>
+                            <button onclick="selecionarDiretorio('dirPadrao')">Selecionar</button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="salvarConfiguracoes()">Salvar Configurações</button>
+                    <div id="statusConfig" class="status-message"></div>
+                </div>
+            `);
             
-            // Mudar emoji/ícone
-            if (document.body.classList.contains('light-theme')) {
-                themeToggle.innerHTML = '🌙';
+            // Carrega configurações salvas
+            if (localStorage.getItem('theme') === 'light') {
+                document.getElementById('selectTema').value = 'claro';
+            }
+        }
+
+        // Funções auxiliares
+        function setMainContent(html) {
+            document.getElementById('mainContent').innerHTML = html;
+        }
+
+        function setActiveLink(pageName) {
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                link.classList.remove('active');
+                if (link.textContent.trim() === pageName) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        function showStatus(elementId, message, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.className = `status-message ${type}`;
+            element.innerHTML = message;
+        }
+
+        // Funções de processamento
+        async function selecionarDiretorio(inputId) {
+            try {
+                const caminho = await eel.selecionar_diretorio()();
+                if (caminho) {
+                    document.getElementById(inputId).value = caminho;
+                    
+                    // Atualiza variáveis globais conforme necessário
+                    if (inputId === 'dirVSM1') diretoriosVSM.dir1 = caminho;
+                    if (inputId === 'dirVSM2') diretoriosVSM.dir2 = caminho;
+                    if (inputId === 'dirVSM3') diretoriosVSM.dir3 = caminho;
+                    
+                    showStatus(`status${inputId.replace('dir', '')}`, `Diretório selecionado: ${caminho}`, 'success');
+                }
+            } catch (error) {
+                console.error('Erro ao selecionar diretório:', error);
+                showStatus(`status${inputId.replace('dir', '')}`, 'Erro ao selecionar diretório', 'error');
+            }
+        }
+
+        async function processarDRX() {
+            const arquivoInput = document.getElementById('arquivoDRX');
+            const dirOutput = document.getElementById('dirDRX').value;
+            const btnProcessar = document.getElementById('btnProcessarDRX');
+            const statusElement = document.getElementById('statusDRX');
+            
+            if (!arquivoInput.files.length || !dirOutput) {
+                showStatus('statusDRX', 'Por favor, selecione o arquivo e o diretório de saída', 'error');
+                return;
+            }
+            
+            try {
+                // Configura estado de carregamento
+                btnProcessar.disabled = true;
+                btnProcessar.innerHTML = '<span class="loading"></span> Processando...';
+                showStatus('statusDRX', 'Processando arquivo DRX...', 'warning');
+                
+                const arquivo = arquivoInput.files[0];
+                const resultado = await eel.processar_drx(arquivo.path, dirOutput)();
+                
+                showStatus('statusDRX', `Processamento concluído: ${resultado}`, 'success');
+            } catch (error) {
+                console.error('Erro no processamento DRX:', error);
+                showStatus('statusDRX', `Erro: ${error.message}`, 'error');
+            } finally {
+                btnProcessar.disabled = false;
+                btnProcessar.textContent = 'Processar DRX';
+            }
+        }
+
+        async function processarVSM() {
+            const dir1 = document.getElementById('dirVSM1').value;
+            const dir2 = document.getElementById('dirVSM2').value;
+            const dir3 = document.getElementById('dirVSM3').value;
+            const btnProcessar = document.getElementById('btnProcessarVSM');
+            const statusElement = document.getElementById('statusVSM');
+            
+            if (!dir1 || !dir2 || !dir3) {
+                showStatus('statusVSM', 'Por favor, selecione todos os diretórios', 'error');
+                return;
+            }
+            
+            try {
+                btnProcessar.disabled = true;
+                btnProcessar.innerHTML = '<span class="loading"></span> Processando...';
+                showStatus('statusVSM', 'Processando dados VSM...', 'warning');
+                
+                const resultado = await eel.processar_vsm(dir1, dir2, dir3)();
+                
+                showStatus('statusVSM', `Processamento concluído: ${resultado}`, 'success');
+            } catch (error) {
+                console.error('Erro no processamento VSM:', error);
+                showStatus('statusVSM', `Erro: ${error.message}`, 'error');
+            } finally {
+                btnProcessar.disabled = false;
+                btnProcessar.textContent = 'Processar VSM';
+            }
+        }
+
+        async function processarFMR() {
+            const arquivoInput = document.getElementById('arquivoFMR');
+            const dirOutput = document.getElementById('dirFMR').value;
+            const btnProcessar = document.getElementById('btnProcessarFMR');
+            const statusElement = document.getElementById('statusFMR');
+            
+            if (!arquivoInput.files.length || !dirOutput) {
+                showStatus('statusFMR', 'Por favor, selecione o arquivo e o diretório de saída', 'error');
+                return;
+            }
+            
+            try {
+                btnProcessar.disabled = true;
+                btnProcessar.innerHTML = '<span class="loading"></span> Processando...';
+                showStatus('statusFMR', 'Processando arquivo FMR...', 'warning');
+                
+                const arquivo = arquivoInput.files[0];
+                const resultado = await eel.processar_fmr(arquivo.path, dirOutput)();
+                
+                showStatus('statusFMR', `Processamento concluído: ${resultado}`, 'success');
+            } catch (error) {
+                console.error('Erro no processamento FMR:', error);
+                showStatus('statusFMR', `Erro: ${error.message}`, 'error');
+            } finally {
+                btnProcessar.disabled = false;
+                btnProcessar.textContent = 'Processar FMR';
+            }
+        }
+
+        function alterarTema(tema) {
+            if (tema === 'claro') {
+                document.body.classList.add('light-theme');
                 localStorage.setItem('theme', 'light');
+                document.getElementById('themeToggle').innerHTML = '🌙';
             } else {
-                themeToggle.innerHTML = '☀️';
+                document.body.classList.remove('light-theme');
                 localStorage.setItem('theme', 'dark');
+                document.getElementById('themeToggle').innerHTML = '☀️';
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            if (document.body.classList.contains('light-theme')) {
+                alterarTema('escuro');
+            } else {
+                alterarTema('claro');
             }
         });
 
-        // Verificar tema ao carregar
-        if (localStorage.getItem('theme') === 'light') {
-            document.body.classList.add('light-theme');
-            themeToggle.innerHTML = '🌙';
-        }
-    }
- // Função para mostrar informações sobre o aplicativo
- function mostrarSobre() {
-            modoAtual = null;
-            mostrarTela('tela-sobre');
-            document.getElementById('conteudo-sobre').innerHTML = `
-                <h3>GMAG - Sistema de Análise de Materiais</h3>
-                <p>Versão 1.0.0</p>
-                <p>Desenvolvido para análise de dados de caracterização de materiais</p>
-                <p>Módulos disponíveis:</p>
-                <ul>
-                    <li>DRX - Difração de Raios X</li>
-                    <li>VSM - Magnetometria de Amostra Vibrante</li>
-                    <li>Termoelétrico - Análise de propriedades termoelétricas</li>
-                    <li>Magneto Impedância - Medições de impedância magnética</li>
-                    <li>FMR - Ressonância Magnética Ferromagnética</li>
-                    <li>Eletroimã - Controle de eletroímãs</li>
-                    <li>Resistência - Medições elétricas</li>
-                </ul>
-            `;
-        }
-    // Inicialização da aplicação
-    async function inicializarAplicacao() {
-        try {
-            // Configurar tema
-            configurarTema();
-            
-            // Carregar diretórios salvos
-            const dirs = await eel.obter_diretorios()();
-            document.getElementById('input-dir').value = dirs.input_dir || '';
-            document.getElementById('output-dir').value = dirs.output_dir || '';
-            x
-            // Verificar se pode habilitar o botão de processamento
-            verificarDiretorios();
-            
-            // Carregar histórico
-            await atualizarHistorico();
-            
-            // Configurar evento do botão de processamento
-            document.getElementById('btn-processar').addEventListener('click', executarProcessamento);
-            
-            console.log('Aplicativo GMAG inicializado com sucesso!');
-        } catch (error) {
-            console.error('Erro na inicialização:', error);
-            atualizarStatus('Erro ao inicializar aplicativo', 'error');
-        }
-    }
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        });
 
-    // Inicialização
-    document.addEventListener('DOMContentLoaded', async function() {
-        // Configurar tema primeiro
-        configurarTema();
-
-        // Carregar configurações do Python
-        try {
-            const configs = await eel.obter_configuracoes()();
-            if (configs.tema === 'claro') {
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carrega tema salvo
+            if (localStorage.getItem('theme') === 'light') {
                 document.body.classList.add('light-theme');
                 document.getElementById('themeToggle').innerHTML = '🌙';
             }
             
-            // Carregar diretórios e histórico
-            await carregarDiretoriosSalvos();
-            await atualizarHistorico();
+            // Esconde sidebar em telas pequenas
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
             
-        } catch (error) {
-            console.error("Erro ao carregar configurações:", error);
-        }
+            console.log('Aplicativo GMAG inicializado!');
+        });
 
-        // Configurar eventos
-        document.getElementById('btn-processar').addEventListener('click', executarProcessamento);
-        
-        console.log('Aplicativo GMAG inicializado!');
-    });
+        // Atualiza visibilidade do sidebar quando a janela é redimensionada
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                document.getElementById('sidebar').classList.remove('hidden');
+            }
+        });
     </script>
 </body>
 </html>

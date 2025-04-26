@@ -279,6 +279,23 @@ def coercitividade(x,y):
 
     return valor_de_coercitividade
 
+def obter_parametros_iniciais(angulo):
+    """Solicita ao usuário os parâmetros iniciais para o ajuste"""
+    print(f"\nForneça os parâmetros iniciais para o ângulo {angulo}:")
+    
+    parametros = {
+        'a': float(input("a (offset): ") or 1),
+        'b': float(input("b (inclinação): ") or 1),
+        'c': float(input("c (amplitude pico 1): ") or 1),
+        'd': float(input("d (amplitude pico 2): ") or 1),
+        'Hr1': float(input("Hr1 (posição pico 1 em Oe): ") or 1000),
+        'dH1': float(input("dH1 (largura pico 1 em Oe): ") or 50),
+        'Hr2': float(input("Hr2 (posição pico 2 em Oe): ") or 1200),
+        'dH2': float(input("dH2 (largura pico 2 em Oe): ") or 50)
+    }
+    
+    return parametros
+
 ###############################################################
 ###############################################################
 ###############################################################
@@ -660,7 +677,7 @@ def VSM(diretorio_origem, diretorio_caminho, diretorio_destino):
     plt.savefig(nome_do_grafico)
     plt.close()
 
-    print("Tudo feito")
+    return "Tudo feito"
 
 ###############################################################
 ###############################################################
@@ -764,6 +781,7 @@ def DRX(arquivo):
     plt.legend()
     plt.grid()
     plt.show()
+    return "Tudo Pronto"
 
 ###############################################################
 ###############################################################
@@ -841,13 +859,16 @@ def Eletroima(Diretorio_inicial, Diretorio_final):
 ###############################################################
 ###############################################################
 
-def FMR(caminho_arquivo):
+def FMR(caminho_arquivo, diretorio_destino):
     
     if not os.path.exists(caminho_arquivo):
         print(f"Erro: Arquivo não encontrado em {caminho_arquivo}")
         return
 
     try:
+        # Criar diretório de destino se não existir
+        os.makedirs(diretorio_destino, exist_ok=True)
+        
         ajustador = AjustadorMultiplosAngulos(caminho_arquivo)
         
         if ajustador.angulos_disponiveis is None or len(ajustador.angulos_disponiveis) == 0:
@@ -858,12 +879,16 @@ def FMR(caminho_arquivo):
         angulos_ordenados = np.sort(ajustador.angulos_disponiveis)
         parametros_anteriores = None
         
-        # Listas para armazenar resultados
+        # Listas para armazenar resultados de ambos os picos
         angulos_plot = []
         Hr1_plot = []
         dH1_plot = []
+        Hr2_plot = []
+        dH2_plot = []
+        amplitude1_plot = []  # Para o parâmetro c
+        amplitude2_plot = []  # Para o parâmetro d
         
-        # Loop especial para o primeiro ângulo (0°)
+         # Loop especial para o primeiro ângulo (0°)
         primeiro_angulo = angulos_ordenados[0]
         while True:
             print(f"\n=== Processando ângulo {primeiro_angulo} ===")
@@ -883,6 +908,8 @@ def FMR(caminho_arquivo):
                     parametros = obter_parametros_iniciais(primeiro_angulo)
                 elif opcao == '3':
                     break
+                elif opcao == '4':
+                    exit()
                 else:
                     print("Opção inválida, tente novamente")
                     continue
@@ -901,9 +928,19 @@ def FMR(caminho_arquivo):
             angulos_plot.append(primeiro_angulo)
             Hr1_plot.append(parametros_anteriores['Hr1'])
             dH1_plot.append(parametros_anteriores['dH1'])
+            Hr2_plot.append(parametros_anteriores['Hr2'])
+            dH2_plot.append(parametros_anteriores['dH2'])
             
-            # Plota os resultados
-            ajustador.plotar_angulo(primeiro_angulo)
+            # Plota os resultados interativamente
+            print("\nExibindo gráfico do ajuste (feche para continuar)...")
+            fig = ajustador.plotar_angulo(primeiro_angulo, mostrar=True)  # Mostra interativamente
+            
+            # Salva os resultados
+            nome_arquivo = f"ajuste_angulo_{primeiro_angulo}.png"
+            caminho_completo = os.path.join(diretorio_destino, nome_arquivo)
+            fig.savefig(caminho_completo)
+            plt.close(fig)
+            print(f"Gráfico salvo em: {caminho_completo}")            
         
         # Processa os demais ângulos automaticamente
         for angulo in angulos_ordenados[1:]:
@@ -917,35 +954,67 @@ def FMR(caminho_arquivo):
             # Atualiza parâmetros para o próximo ângulo
             parametros_anteriores = ajustador.resultados[angulo]['parametros']
             
-            # Adiciona aos dados de plotagem
+            # Adiciona aos dados de plotagem para ambos picos
             angulos_plot.append(angulo)
             Hr1_plot.append(parametros_anteriores['Hr1'])
             dH1_plot.append(parametros_anteriores['dH1'])
+            Hr2_plot.append(parametros_anteriores['Hr2'])
+            dH2_plot.append(parametros_anteriores['dH2'])
+            amplitude1_plot.append(parametros_anteriores['c'])
+            amplitude2_plot.append(parametros_anteriores['d'])
             
-            # Plota os resultados
-            ajustador.plotar_angulo(angulo)
+            # Plota e salva os resultados
+            fig = ajustador.plotar_angulo(angulo, mostrar=False)
+            nome_arquivo = f"ajuste_angulo_{angulo}.png"
+            caminho_completo = os.path.join(diretorio_destino, nome_arquivo)
+            fig.savefig(caminho_completo)
+            plt.close(fig)
+            print(f"Gráfico salvo em: {caminho_completo}")
         
         # Plot dos parâmetros em função do ângulo
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(15, 10))
         
-        # Subplot para Hr1
-        plt.subplot(1, 2, 1)
-        plt.plot(angulos_plot, Hr1_plot, 'bo-')
+        # Subplot para posições dos picos (Hr1 e Hr2)
+        plt.subplot(2, 2, 1)
+        plt.plot(angulos_plot, Hr1_plot, 'bo-', label='Pico 1')
+        plt.plot(angulos_plot, Hr2_plot, 'ro-', label='Pico 2')
         plt.xlabel('Ângulo (graus)')
-        plt.ylabel('Hr1 (Oe)')
-        plt.title('Variação de Hr1 com o ângulo')
+        plt.ylabel('Campo de ressonância (Oe)')
+        plt.title('Variação das posições dos picos com o ângulo')
+        plt.legend()
         plt.grid(True)
         
-        # Subplot para dH1
-        plt.subplot(1, 2, 2)
-        plt.plot(angulos_plot, dH1_plot, 'ro-')
+        # Subplot para larguras dos picos (dH1 e dH2)
+        plt.subplot(2, 2, 2)
+        plt.plot(angulos_plot, dH1_plot, 'bo-', label='Pico 1')
+        plt.plot(angulos_plot, dH2_plot, 'ro-', label='Pico 2')
         plt.xlabel('Ângulo (graus)')
-        plt.ylabel('dH1 (Oe)')
-        plt.title('Variação de dH1 com o ângulo')
+        plt.ylabel('Largura do pico (Oe)')
+        plt.title('Variação das larguras dos picos com o ângulo')
+        plt.legend()
+        plt.grid(True)
+        
+        # Subplot para amplitudes dos picos (c e d)
+        plt.subplot(2, 2, 3)
+        plt.plot(angulos_plot, amplitude1_plot, 'bo-', label='Pico 1 (c)')
+        plt.plot(angulos_plot, amplitude2_plot, 'ro-', label='Pico 2 (d)')
+        plt.xlabel('Ângulo (graus)')
+        plt.ylabel('Amplitude do pico')
+        plt.title('Variação das amplitudes dos picos com o ângulo')
+        plt.legend()
         plt.grid(True)
         
         plt.tight_layout()
+        
+        # Salva o gráfico de variação dos parâmetros
+        nome_arquivo = "variacao_parametros.png"
+        caminho_completo = os.path.join(diretorio_destino, nome_arquivo)
+        plt.savefig(caminho_completo)
+        print(f"Gráfico de variação dos parâmetros salvo em: {caminho_completo}")
+        
         plt.show()
             
     except Exception as e:
         print(f"\nOcorreu um erro: {str(e)}")
+
+    return "Tudo Pronto"
